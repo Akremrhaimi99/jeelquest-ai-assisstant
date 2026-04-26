@@ -74,6 +74,22 @@ def clean_text(text: str) -> str:
     text = "\n".join([line.strip() for line in text.splitlines()])
     return text.strip()
 
+# ---------------- Filename CLEANING ----------------
+def clean_filename(filename):
+    # Normaliser Unicode
+    filename = unicodedata.normalize("NFKD", filename)
+
+    # Supprimer caractères non ASCII
+    filename = filename.encode("ascii", "ignore").decode("ascii")
+
+    # Remplacer espaces par _
+    filename = filename.replace(" ", "_")
+
+    # Supprimer caractères dangereux
+    filename = re.sub(r"[^\w\.-]", "", filename)
+
+    return filename
+
 # ---------------- CHUNKING ----------------
 def split_text(text, chunk_size=500, overlap=50):
     chunks = []
@@ -107,10 +123,21 @@ async def upload_files(documents: List[UploadFile] = File(...)):
             raise HTTPException(status_code=400, detail="Only PDF files allowed")
 
         try:
-            file_path = os.path.join(UPLOAD_FOLDER, file.filename)
-
+            # Nettoyer le nom du fichier
+            safe_filename = clean_filename(file.filename)
+            
+            # Chemin ABSOLU (important pour pdf2image car unstructured travaille meme avec ocr pour les fichier scaner) pour le chemain complet du fichier avec c:\ 
+            file_path = os.path.abspath(os.path.join(UPLOAD_FOLDER, safe_filename))
+            
+            # Sauvegarde
             with open(file_path, "wb") as buffer:
                 shutil.copyfileobj(file.file, buffer)
+
+             #  Vérification (très utile debug)
+            if not os.path.exists(file_path):
+                raise Exception(f"File not saved correctly: {file_path}")
+
+            print("Saved file at:", file_path)
 
             # ✅ PDF extraction FIXED
             raw_text = extract_pdf_text(file_path)
