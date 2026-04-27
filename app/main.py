@@ -32,6 +32,13 @@ MONGO_URI = os.getenv("MONGO_URI")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 api_key = os.getenv("HUGGINGFACE_API_KEY")
 
+
+if not GOOGLE_API_KEY:
+    raise Exception("GOOGLE_API_KEY not set")
+
+if not api_key:
+    raise Exception("HUGGINGFACE_API_KEY not set")
+	
 embedding_model = HuggingFaceInferenceAPIEmbeddings(
     api_key=api_key,
     model_name="BAAI/bge-base-en-v1.5"
@@ -59,7 +66,7 @@ def get_db_connection():
         raise Exception("MONGO_URI not set")
 
     client = MongoClient(MONGO_URI)
-    return client.get_default_database()
+    return client["documents_db"]
 
 
 # ---------------- TEXT CLEANING ----------------
@@ -202,13 +209,15 @@ async def upload_files(documents: List[UploadFile] = File(...)):
             uploaded_files.append(file.filename)
 
             print("=== OK ===", file.filename)
-	        # Nettoyage fichier après usage
-	        os.remove(file_path)
+	        
         except Exception as e:
             import traceback
             print(traceback.format_exc())
             raise HTTPException(status_code=500, detail=str(e))
 
+        finally:
+            if file_path and os.path.exists(file_path):
+                os.remove(file_path)
     return {
         "message": "Files uploaded and processed successfully",
         "files": uploaded_files
@@ -249,7 +258,7 @@ async def chatbot(request: ChatRequest):
         )
 
         # poser une question
-        result = qa_chain.invoke(request.query)
+        result = qa_chain.invoke({"query": request.query})
 
         answer = result.get("result", "")
         source_docs = result.get("source_documents", [])
