@@ -1,14 +1,15 @@
 fastapi
 uvicorn[standard]
-
-pymongo
 python-dotenv
+pymongo
 
-langchain==0.2.17
-langchain-core==0.2.43
-langchain-community==0.2.19
+langchain>=0.2.17,<0.3
+langchain-core>=0.2.23,<0.3
+langchain-community>=0.2.17,<0.3
 langchain-google-genai
+langchain-milvus
 
 pymilvus
 huggingface-hub
 pymupdf
+python-multipart
