@@ -2,26 +2,27 @@ import os
 import shutil
 from datetime import datetime
 from typing import List
-import traceback
 
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from pymongo import MongoClient
 
-import fitz  # PyMuPDF (REMPLACEMENT)
-
+from unstructured.partition.pdf import partition_pdf
 import re
 import unicodedata
 from dotenv import load_dotenv
 
 from langchain_community.vectorstores import Milvus
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_core.documents import Document
+
+from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
+from langchain.schema import Document
+
 from langchain.chains import RetrievalQA
 from langchain_google_genai import ChatGoogleGenerativeAI
 
+
 from pydantic import BaseModel
 
-# ---------------- LOAD ENV ----------------
+
 load_dotenv()
 
 ZILLIZ_URI = os.getenv("ZILLIZ_URI")
@@ -29,9 +30,10 @@ ZILLIZ_TOKEN = os.getenv("ZILLIZ_TOKEN")
 COLLECTION_NAME = os.getenv("COLLECTION_NAME")
 MONGO_URI = os.getenv("MONGO_URI")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+api_key = os.getenv("HUGGINGFACE_API_KEY")
 
-# ---------------- EMBEDDINGS ----------------
-embedding_model = HuggingFaceEmbeddings(
+embedding_model = HuggingFaceInferenceAPIEmbeddings(
+    api_key=api_key,
     model_name="BAAI/bge-base-en-v1.5"
 )
 
@@ -45,8 +47,8 @@ vectorstore = Milvus(
     auto_id=True
 )
 
-# ---------------- APP ----------------
-app = FastAPI(title="JeelQuest RAG API", version="1.0")
+
+app = FastAPI(title="JeelQuest Questy V1", version="1.0")
 
 UPLOAD_FOLDER = "/tmp/uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -59,20 +61,45 @@ def get_db_connection():
     client = MongoClient(MONGO_URI)
     return client.get_default_database()
 
+
 # ---------------- TEXT CLEANING ----------------
-def clean_text(text: str) -> str:
-    text = unicodedata.normalize("NFKC", text)
-    text = text.replace("\xa0", " ").replace("\t", " ")
-    text = re.sub(r"[¢©®«#]", "", text)
-    text = re.sub(r"\b[eJo]\b", "", text)
-    text = re.sub(r"^\s*o\s+", "- ", text, flags=re.MULTILINE)
-    text = text.replace("&", "and")
-    text = re.sub(r'(?<!\S)@(?!\S)', 'at', text)
-    text = re.sub(r"\n+", "\n", text)
-    text = re.sub(r"[ ]{2,}", " ", text)
-    text = re.sub(r"-\s*\n\s*", "", text)
-    text = "\n".join([line.strip() for line in text.splitlines()])
+def clean_text(text: str) -> str: 
+    
+    # Normaliser Unicode (supprime les caractères bizarres) 
+    text = unicodedata.normalize("NFKC", text) 
+    
+    # Remplacer les caractères invisibles et tabulations exemple "Hello\xa0World" 
+    text = text.replace("\xa0", " ").replace("\t", " ") 
+    
+    # Supprimer les caractères spéciaux typiques du PDF 
+    text = re.sub(r"[¢©®«#]", "", text) 
+    
+    # Supprimer les lettres seules "e" et "J" qui apparaissent souvent comme bruit (exemple "." ce transforme en "e" et "➡" en "J" ) 
+    text = re.sub(r"\b[eJo]\b", "", text) 
+    
+    # de "o" en "- " pour les listes 
+    text = re.sub(r"^\s*o\s+", "- ", text, flags=re.MULTILINE) 
+    
+    # Remplacer & par and 
+    text = text.replace("&", "and") 
+    
+    # Remplacer @ par at (mais pas les emails) 
+    text = re.sub(r'(?<!\S)@(?!\S)', 'at', text) 
+    
+    # Supprimer sauts de ligne multiples 
+    text = re.sub(r"\n+", "\n", text) 
+    
+    # Supprimer espaces multiples 
+    text = re.sub(r"[ ]{2,}", " ", text) 
+    
+    # Corriger les mots coupés (ex: "exem-\nple" → "exemple") 
+    text = re.sub(r"-\s*\n\s*", "", text) 
+    
+    # Supprimer espaces en début / fin de ligne 
+    text = "\n".join([line.strip() for line in text.splitlines()]) 
+    
     return text.strip()
+
 
 # ---------------- Filename CLEANING ----------------
 def clean_filename(filename):
@@ -90,7 +117,8 @@ def clean_filename(filename):
 
     return filename
 
-# ---------------- CHUNKING ----------------
+
+
 def split_text(text, chunk_size=500, overlap=50):
     chunks = []
     start = 0
@@ -100,22 +128,13 @@ def split_text(text, chunk_size=500, overlap=50):
         start += chunk_size - overlap
     return chunks
 
-# ---------------- PDF EXTRACTION (NEW) ----------------
-def extract_pdf_text(file_path: str) -> str:
-    text = ""
-    doc = fitz.open(file_path)
-    for page in doc:
-        text += page.get_text()
-    return text
 
-# ---------------- UPLOAD PDF ----------------
 @app.post("/upload-documents/")
 async def upload_files(documents: List[UploadFile] = File(...)):
 
+    uploaded_files = []
     db = get_db_connection()
     documents_collection = db["documents"]
-
-    uploaded_files = []
 
     for file in documents:
 
@@ -123,6 +142,7 @@ async def upload_files(documents: List[UploadFile] = File(...)):
             raise HTTPException(status_code=400, detail="Only PDF files allowed")
 
         try:
+            
             # Nettoyer le nom du fichier
             safe_filename = clean_filename(file.filename)
             
@@ -139,12 +159,23 @@ async def upload_files(documents: List[UploadFile] = File(...)):
 
             print("Saved file at:", file_path)
 
-            # ✅ PDF extraction FIXED
-            raw_text = extract_pdf_text(file_path)
 
+            # Extraction
+            elements = partition_pdf(
+    		filename=file_path,
+    		strategy="fast"
+	    )		
+            raw_text = "\n".join(
+                [el.text for el in elements if hasattr(el, "text") and el.text]
+            )
+
+            # Nettoyage
             extracted_text = clean_text(raw_text)
+
+            # Chunking
             chunks = split_text(extracted_text)
 
+            # Convertir en document pour Milvus
             docs = [
                 Document(
                     page_content=chunk,
@@ -153,80 +184,98 @@ async def upload_files(documents: List[UploadFile] = File(...)):
                 for chunk in chunks if chunk.strip()
             ]
 
+            # Stockage sur Milvus
             if docs:
                 vectorstore.add_documents(docs)
 
-            documents_collection.insert_one({
+        
+            doc_entry = {
                 "filename": file.filename,
+                "filepath": file_path,
                 "content": extracted_text,
                 "chunks": chunks,
-                "created_at": datetime.utcnow()
-            })
+                "created_at": datetime.utcnow(),
+            }
+
+            documents_collection.insert_one(doc_entry)
 
             uploaded_files.append(file.filename)
 
-            # cleanup (important cloud)
-            os.remove(file_path)
-
+            print("=== OK ===", file.filename)
+	        # Nettoyage fichier après usage
+	        os.remove(file_path)
         except Exception as e:
+            import traceback
+            print(traceback.format_exc())
             raise HTTPException(status_code=500, detail=str(e))
 
     return {
-        "message": "Uploaded successfully",
+        "message": "Files uploaded and processed successfully",
         "files": uploaded_files
     }
 
+
 # ---------------- CHATBOT ----------------
+
+# pour permet de faire des recherches similaires dans Milvus avec les 4 chunks les plus pertinents
 retriever = vectorstore.as_retriever(search_kwargs={"k": 4})
 
+# query il faut etre une chaine de caractères (string) et c'est obligatoire
 class ChatRequest(BaseModel):
     query: str
 
 @app.post("/chatbot/")
 async def chatbot(request: ChatRequest):
-
     try:
+
         db = get_db_connection()
         chat_collection = db["chat_history"]
 
+        # récupérer API key Gemini
+        google_api_key = os.getenv("GOOGLE_API_KEY")
+
+        # initialiser de LLM
         llm = ChatGoogleGenerativeAI(
             model="gemini-3.1-flash-lite-preview",
-            google_api_key=GOOGLE_API_KEY,
+            google_api_key=google_api_key,
             temperature=0
         )
 
+        # créer le pipeline RAG
         qa_chain = RetrievalQA.from_chain_type(
             llm=llm,
             retriever=retriever,
             return_source_documents=True
         )
 
+        # poser une question
         result = qa_chain.invoke(request.query)
 
         answer = result.get("result", "")
         source_docs = result.get("source_documents", [])
 
-        sources = [
-            {
+        # formatter sources de texte pour la réponse (afficher les 300 premiers caractères et la source)
+        sources_text = []
+        for doc in source_docs:
+            sources_text.append({
                 "content": doc.page_content[:300],
                 "source": doc.metadata.get("source", "unknown")
-            }
-            for doc in source_docs
-        ]
+            })
 
-        chat_collection.insert_one({
+        chat_entry = {
             "query": request.query,
             "answer": answer,
-            "sources": sources,
+            "num_sources": len(source_docs),
+            "sources": sources_text,
             "created_at": datetime.utcnow()
-        })
+        }
 
+        chat_collection.insert_one(chat_entry)
         return {
             "query": request.query,
             "answer": answer,
-            "sources": sources
+            "sources": sources_text
         }
 
     except Exception as e:
-        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
