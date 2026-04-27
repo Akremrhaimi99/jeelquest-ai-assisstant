@@ -147,7 +147,7 @@ async def upload_files(documents: List[UploadFile] = File(...)):
 
         if not file.filename.endswith(".pdf"):
             raise HTTPException(status_code=400, detail="Only PDF files allowed")
-
+		file_path = None
         try:
             
             # Nettoyer le nom du fichier
