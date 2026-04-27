@@ -12,5 +12,4 @@ pymilvus
 
 huggingface-hub
 
-unstructured
-pdfminer.six
+pymupdf
