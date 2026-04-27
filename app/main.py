@@ -30,11 +30,7 @@ MONGO_URI = os.getenv("MONGO_URI")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 api_key = os.getenv("HUGGINGFACE_API_KEY")
 
-if not GOOGLE_API_KEY:
-    raise Exception("GOOGLE_API_KEY not set")
 
-if not api_key:
-    raise Exception("HUGGINGFACE_API_KEY not set")
 
 embedding_model = HuggingFaceInferenceAPIEmbeddings(
     api_key=api_key,
