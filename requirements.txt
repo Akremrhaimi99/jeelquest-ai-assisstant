@@ -5,8 +5,8 @@ pymongo
 python-dotenv
 
 langchain==0.2.11
-langchain-core>=0.2.23
-langchain-community>=0.2.11
+langchain-core>=0.2.23,<0.3.0
+langchain-community>=0.2.11,<0.3.0
 langchain-google-genai
 
 pymilvus
