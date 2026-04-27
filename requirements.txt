@@ -4,9 +4,9 @@ uvicorn[standard]
 pymongo
 python-dotenv
 
-langchain
-langchain-community
-langchain-core
+langchain==0.2.11
+langchain-core>=0.2.23
+langchain-community>=0.2.11
 langchain-google-genai
 
 pymilvus
