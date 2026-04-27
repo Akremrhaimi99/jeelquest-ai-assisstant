@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 
 from langchain_community.vectorstores import Milvus
 from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
-from langchain.schema import Document
+from langchain_core.documents import Document
 
 from langchain.chains import RetrievalQA
 from langchain_google_genai import ChatGoogleGenerativeAI
