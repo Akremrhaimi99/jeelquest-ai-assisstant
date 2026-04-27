@@ -12,4 +12,4 @@ pymilvus
 
 huggingface-hub
 
-unstructured
+unstructured[pdf]
