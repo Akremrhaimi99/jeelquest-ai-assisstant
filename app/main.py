@@ -6,7 +6,7 @@ from typing import List
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from pymongo import MongoClient
 
-from unstructured.partition.pdf import partition_pdf
+import fitz  # PyMuPDF
 import re
 import unicodedata
 from dotenv import load_dotenv
@@ -127,14 +127,11 @@ async def upload_files(documents: List[UploadFile] = File(...)):
 
             print("Saved file at:", file_path)
 
-            elements = partition_pdf(
-                filename=file_path,
-                strategy="fast"
-            )
+            doc = fitz.open(file_path)
 
-            raw_text = "\n".join(
-                [el.text for el in elements if hasattr(el, "text") and el.text]
-            )
+            raw_text = ""
+            for page in doc:
+                raw_text += page.get_text("text") + "\n"
 
             extracted_text = clean_text(raw_text)
             chunks = split_text(extracted_text)
