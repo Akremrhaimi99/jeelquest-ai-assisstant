@@ -1,3 +1,6 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.2.2+cpu
+
 fastapi
 uvicorn[standard]
 python-dotenv
@@ -13,4 +16,5 @@ pymilvus
 huggingface-hub
 pymupdf
 python-multipart
+
 sentence-transformers
