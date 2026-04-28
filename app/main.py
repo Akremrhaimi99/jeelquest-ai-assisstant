@@ -33,7 +33,7 @@ API_KEY = os.getenv("HUGGINGFACE_API_KEY")
 
 embedding_model = GoogleGenerativeAIEmbeddings(
     model="models/embedding-001",
-    google_api_key=os.getenv("GOOGLE_API_KEY")
+    google_api_key=os.getenv("GOOGLE_API_KEY2")
 )
 
 vectorstore = Milvus(
