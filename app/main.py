@@ -12,7 +12,7 @@ import unicodedata
 from dotenv import load_dotenv
 
 from langchain_community.vectorstores import Milvus
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.documents import Document
 
 from langchain.chains import RetrievalQA
@@ -29,7 +29,6 @@ COLLECTION_NAME = os.getenv("COLLECTION_NAME")
 MONGO_URI = os.getenv("MONGO_URI")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 API_KEY = os.getenv("HUGGINGFACE_API_KEY")
-
 
 
 embedding_model = HuggingFaceEmbeddings(
