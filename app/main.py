@@ -12,7 +12,7 @@ import unicodedata
 from dotenv import load_dotenv
 
 from langchain_community.vectorstores import Milvus
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
 from langchain_core.documents import Document
 
 from langchain.chains import RetrievalQA
@@ -32,9 +32,7 @@ api_key = os.getenv("HUGGINGFACE_API_KEY")
 
 
 
-embedding_model = HuggingFaceEmbeddings(
-    model_name="BAAI/bge-base-en-v1.5"
-)
+embedding_model = HuggingFaceInferenceAPIEmbeddings( api_key=api_key, model_name="BAAI/bge-base-en-v1.5" )
 
 vectorstore = Milvus(
     embedding_function=embedding_model,
