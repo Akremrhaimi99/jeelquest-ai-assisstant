@@ -11,7 +11,7 @@ import re
 import unicodedata
 from dotenv import load_dotenv
 
-from langchain_milvus import MilvusVectorStore
+from langchain_community.vectorstores import Milvus
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_core.documents import Document
 
@@ -36,7 +36,7 @@ embedding_model = HuggingFaceEmbeddings(
     model_name="sentence-transformers/all-MiniLM-L6-v2"
 )
 
-vectorstore = MilvusVectorStore(
+vectorstore = Milvus(
     embedding_function=embedding_model,
     collection_name=COLLECTION_NAME,
     connection_args={
