@@ -11,8 +11,8 @@ import re
 import unicodedata
 from dotenv import load_dotenv
 
-from langchain_community.vectorstores import Milvus
-from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
+from langchain_milvus import MilvusVectorStore
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_core.documents import Document
 
 from langchain.chains import RetrievalQA
@@ -31,16 +31,12 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 API_KEY = os.getenv("HUGGINGFACE_API_KEY")
 
 
-print(ZILLIZ_URI)
-print(ZILLIZ_TOKEN)
-print(COLLECTION_NAME)
-print(MONGO_URI)
-print(GOOGLE_API_KEY)
-print(API_KEY)
 
-embedding_model = HuggingFaceInferenceAPIEmbeddings( api_key=API_KEY, model_name="BAAI/bge-base-en-v1.5" )
+embedding_model = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/all-MiniLM-L6-v2"
+)
 
-vectorstore = Milvus(
+vectorstore = MilvusVectorStore(
     embedding_function=embedding_model,
     collection_name=COLLECTION_NAME,
     connection_args={
