@@ -31,7 +31,7 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 API_KEY = os.getenv("HUGGINGFACE_API_KEY")
 
 
-embedding_model = HuggingFaceEmbeddings(
+embedding_model = HuggingFaceInferenceAPIEmbeddings(
     api_key=os.getenv("HUGGINGFACE_API_KEY"),
     model_name="sentence-transformers/all-MiniLM-L6-v2"
 )
