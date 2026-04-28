@@ -12,7 +12,7 @@ import unicodedata
 from dotenv import load_dotenv
 
 from langchain_community.vectorstores import Milvus
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
 from langchain_core.documents import Document
 
 from langchain.chains import RetrievalQA
@@ -32,6 +32,7 @@ API_KEY = os.getenv("HUGGINGFACE_API_KEY")
 
 
 embedding_model = HuggingFaceEmbeddings(
+    api_key=os.getenv("HUGGINGFACE_API_KEY"),
     model_name="sentence-transformers/all-MiniLM-L6-v2"
 )
 
