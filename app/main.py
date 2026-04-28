@@ -98,13 +98,13 @@ def split_text(text, chunk_size=500, overlap=50):
 
 # ---------------- UPLOAD ----------------
 @app.post("/upload-documents/")
-async def upload_files(documents: List[UploadFile] = File(...)):
+async def upload_files(document: UploadFile = File(...)):
 
     uploaded_files = []
     db = get_db_connection()
     documents_collection = db["documents"]
 
-    for file in documents:
+    for file in [document]:
 
         file_path = None
 
