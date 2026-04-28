@@ -28,11 +28,17 @@ ZILLIZ_TOKEN = os.getenv("ZILLIZ_TOKEN")
 COLLECTION_NAME = os.getenv("COLLECTION_NAME")
 MONGO_URI = os.getenv("MONGO_URI")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-api_key = os.getenv("HUGGINGFACE_API_KEY")
+API_KEY = os.getenv("HUGGINGFACE_API_KEY")
 
 
+print(ZILLIZ_URI)
+print(ZILLIZ_TOKEN)
+print(COLLECTION_NAME)
+print(MONGO_URI)
+print(GOOGLE_API_KEY)
+print(API_KEY)
 
-embedding_model = HuggingFaceInferenceAPIEmbeddings( api_key=api_key, model_name="BAAI/bge-base-en-v1.5" )
+embedding_model = HuggingFaceInferenceAPIEmbeddings( api_key=API_KEY, model_name="BAAI/bge-base-en-v1.5" )
 
 vectorstore = Milvus(
     embedding_function=embedding_model,
