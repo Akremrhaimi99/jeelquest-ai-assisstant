@@ -12,7 +12,7 @@ import unicodedata
 from dotenv import load_dotenv
 
 from langchain_community.vectorstores import Milvus
-from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_core.documents import Document
 
 from langchain.chains import RetrievalQA
@@ -31,9 +31,9 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 API_KEY = os.getenv("HUGGINGFACE_API_KEY")
 
 
-embedding_model = HuggingFaceInferenceAPIEmbeddings(
-    api_key=os.getenv("HUGGINGFACE_API_KEY"),
-    model_name="sentence-transformers/all-MiniLM-L6-v2"
+embedding_model = GoogleGenerativeAIEmbeddings(
+    model="models/embedding-001",
+    google_api_key=os.getenv("GOOGLE_API_KEY")
 )
 
 vectorstore = Milvus(
