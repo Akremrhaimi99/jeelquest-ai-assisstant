@@ -13,3 +13,4 @@ pymilvus
 huggingface-hub
 pymupdf
 python-multipart
+sentence-transformers
