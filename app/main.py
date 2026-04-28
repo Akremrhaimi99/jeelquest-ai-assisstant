@@ -31,8 +31,9 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 API_KEY = os.getenv("HUGGINGFACE_API_KEY")
 
 
+
 embedding_model = GoogleGenerativeAIEmbeddings(
-    model="text-embedding-004",
+    model="models/text-embedding-004",
     google_api_key=os.getenv("GOOGLE_API_KEY2")
 )
 
