@@ -8,7 +8,6 @@ langchain-core>=0.2.23,<0.3
 langchain-community>=0.2.17,<0.3
 langchain-google-genai
 langchain-milvus
-langchain-huggingface
 
 pymilvus
 huggingface-hub
