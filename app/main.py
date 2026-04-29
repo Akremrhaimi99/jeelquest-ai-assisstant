@@ -24,6 +24,8 @@ from pydantic import BaseModel
 # Import pour l'authentification Google
 import google.generativeai as genai
 
+from fastapi.middleware.cors import CORSMiddleware
+
 load_dotenv()
 
 ZILLIZ_URI = os.getenv("ZILLIZ_URI")
@@ -116,6 +118,14 @@ def setup_vectorstore():
 vectorstore = setup_vectorstore()
 
 app = FastAPI(title="JeelQuest Questy V1", version="1.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 UPLOAD_FOLDER = "/tmp/uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
