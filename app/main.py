@@ -82,7 +82,7 @@ def setup_vectorstore():
                     print(f"Suppression de l'ancienne collection : {COLLECTION_NAME}")
                     collection.drop()
                     utility.drop_collection(COLLECTION_NAME)
-                    print("✅ Ancienne collection supprimée")
+                    print(" Ancienne collection supprimée")
             else:
                 print("Champ vectoriel non trouvé dans le schéma")
         
@@ -97,7 +97,7 @@ def setup_vectorstore():
             auto_id=True
         )
         
-        print(f"✅ Vectorstore initialisé avec la collection : {COLLECTION_NAME}")
+        print(f" Vectorstore initialisé avec la collection : {COLLECTION_NAME}")
         return vectorstore
         
     except Exception as e:
@@ -121,9 +121,9 @@ app = FastAPI(title="JeelQuest Questy V1", version="1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://beta.jeelquest.space/"],  
+    allow_origins=["*"],  
     allow_credentials=True,
-    allow_methods=["POST"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
