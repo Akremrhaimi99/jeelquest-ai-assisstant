@@ -121,7 +121,7 @@ app = FastAPI(title="JeelQuest Questy V1", version="1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  
+    allow_origins=["http://beta.jeelquest.space/"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
