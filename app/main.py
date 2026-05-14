@@ -277,7 +277,7 @@ async def chatbot(request: ChatRequest):
 
         # Utiliser GOOGLE_API_KEY pour le chatbot (clé dédiée)
         llm = ChatGoogleGenerativeAI(
-            model="gemini-3.1-flash-lite-preview",  # Modèle valide
+            model="gemini-3.1-flash-lite",  # Modèle valide
             google_api_key=GOOGLE_API_KEY,  # Clé dédiée pour le chat
             temperature=0
         )
